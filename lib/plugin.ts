@@ -2,7 +2,7 @@ import Cookies from "js-cookie";
 import { Plugin } from "@nuxt/types";
 
 const COOKIE_PREFIX: string = "abs";
-const EVENT_NAME: string = require("<%= options.event %>");
+const EVENT_NAME: string = "<%= options.event %>";
 const EXPERIMENTS: Experiment[] = require("<%= options.experiments %>");
 
 const reported: string[] = [];
@@ -89,8 +89,8 @@ export function experimentVariant(
   return Number.parseInt(activeVariant);
 }
 
-const googleOptimizePlugin: Plugin = (ctx, inject): void => {
+const abSegmentPlugin: Plugin = (ctx, inject): void => {
   inject("abtest", experimentVariant);
 };
 
-export default googleOptimizePlugin;
+export default abSegmentPlugin;
