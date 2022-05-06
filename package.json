@@ -1,0 +1,28 @@
+{
+  "name": "nuxt-ab-segment",
+  "version": "1.0.0-alpha",
+  "description": "NuxtJS module for A/B testing with Segment Analytics",
+  "repository": "github:dogchef-be/nuxt-ab-segment",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/module.js",
+  "types": "dist/module.d.ts",
+  "scripts": {
+    "clean": "npm prune && rm -rf dist",
+    "transpile": "tsc",
+    "build": "npm run clean && npm run transpile"
+  },
+  "dependencies": {
+    "js-cookie": "^3.0.1"
+  },
+  "devDependencies": {
+    "@nuxt/types": "^2.15.8",
+    "@nuxt/typescript-build": "^2.1.0",
+    "@types/js-cookie": "^3.0.2",
+    "@types/segment-analytics": "^0.0.34",
+    "nuxt": "^2.15.8",
+    "typescript": "^4.5.5"
+  }
+}
