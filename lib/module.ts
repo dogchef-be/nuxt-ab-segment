@@ -10,6 +10,7 @@ declare module "vue/types/vue" {
 // eslint-disable-next-line
 export default function AbSegmentModule(this: any): void {
   const defaults = {
+    event: "AB Test",
     experiments: "~/experiments.js",
   };
 

@@ -2,6 +2,7 @@ import Cookies from "js-cookie";
 import { Plugin } from "@nuxt/types";
 
 const COOKIE_PREFIX: string = "abs";
+const EVENT_NAME: string = require("<%= options.event %>");
 const EXPERIMENTS: Experiment[] = require("<%= options.experiments %>");
 
 const reported: string[] = [];
@@ -76,7 +77,7 @@ export function experimentVariant(
   const reportedKey = `${experimentName}_${activeVariant}`;
   if (reported.indexOf(reportedKey) === -1) {
     if (window.analytics) {
-      window.analytics.track('ab_test', {
+      window.analytics.track(EVENT_NAME, {
         experiment: experimentName,
         variant: activeVariant
       });
