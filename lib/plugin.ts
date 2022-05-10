@@ -56,7 +56,7 @@ export function experimentVariant(
   }
 
   // Determine the active variant of the experiment
-  let activeVariant: string = Cookies.get(key) || "";
+  let activeVariant: string | number = Cookies.get(key) || "";
 
   if (activeVariant.length === 0) {
     const weights: number[] = experiment.variants.map((weight) =>
@@ -73,6 +73,9 @@ export function experimentVariant(
     });
   }
 
+  // Convert active variant into a number type
+  activeVariant = Number.parseInt(activeVariant)
+
   // Let Segment know about the active experiment's variant
   const reportedKey = `${experimentName}_${activeVariant}`;
   if (reported.indexOf(reportedKey) === -1) {
@@ -86,7 +89,7 @@ export function experimentVariant(
     }
   }
 
-  return Number.parseInt(activeVariant);
+  return activeVariant;
 }
 
 const abSegmentPlugin: Plugin = (ctx, inject): void => {
