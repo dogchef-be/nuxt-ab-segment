@@ -25,7 +25,7 @@
 - Run multiple experiments simultaneously
 - TypeScript support
 - Cookies to persist variants across users
-- Force a specific variant via url or param. E.g. `url?experiment-x=1` or `this.$abtest('experiment-x', 1);`
+- Force a specific variant via url or param. E.g. `url?abs_experiment-x=1` or `this.$abtest('experiment-x', 1);`
 
 ## Dependencies
 
@@ -126,11 +126,11 @@ It can be used inside components like:
 }
 ```
 
-An example of the event properties reported to Segment:
+An example of event properties reported to Segment:
 
 ```js
 {
-  experiment: 'ab_pm_20off',
+  experiment: 'experiment-x',
   variant: 1
 }
 ```
