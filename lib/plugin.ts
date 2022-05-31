@@ -68,7 +68,7 @@ export function experimentVariant(
       activeVariant = weightedRandom(weights);
     }
 
-    Cookies.set(key, activeVariant, {
+    Cookies.set(cookieKey, activeVariant, {
       expires: experiment.maxAgeDays,
     });
   }
