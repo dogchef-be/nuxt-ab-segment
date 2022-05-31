@@ -41,22 +41,22 @@ export function experimentVariant(
     return 0;
   }
 
-  const key = `${COOKIE_PREFIX}_${experimentName}`;
+  const cookieKey = `${COOKIE_PREFIX}_${experimentName}`;
 
   // Force a specific variant by url or param
-  const forceVariantByUrl = window.$nuxt.$route.query[key] as
+  const forceVariantByUrl = window.$nuxt.$route.query[experimentName] as
     | string
     | undefined;
 
   const variant = forceVariantByUrl ?? forceVariant?.toString() ?? undefined;
   if (variant) {
-    Cookies.set(key, variant, {
+    Cookies.set(cookieKey, variant, {
       expires: experiment.maxAgeDays,
     });
   }
 
   // Determine the active variant of the experiment
-  let activeVariant: string | number = Cookies.get(key) || "";
+  let activeVariant: string | number = Cookies.get(cookieKey) || "";
 
   if (activeVariant.length === 0) {
     const weights: number[] = experiment.variants.map((weight) =>
