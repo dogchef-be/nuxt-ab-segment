@@ -26,6 +26,7 @@
 - TypeScript support
 - Cookies to persist variants across users
 - Force a specific variant via url or param. E.g. `url?abs_experiment-x=1` or `this.$abtest('experiment-x', 1);`
+- Disable all a/b tests by cookie (`abs_disabled=1`), which is useful for E2E tests in CI/CD pipelines
 
 ## Dependencies
 
