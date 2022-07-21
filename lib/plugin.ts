@@ -38,7 +38,7 @@ export function experimentVariant(
     (exp: Experiment) => exp.name === experimentName
   );
 
-  if (experiment === undefined || Cookies.get(`${COOKIE_PREFIX}_disabled`) === '1') {
+  if (experiment === undefined || Cookies.get(`${COOKIE_PREFIX}_disabled`) === "1") {
     return 0;
   }
 
@@ -60,6 +60,12 @@ export function experimentVariant(
   let activeVariant: string | number = Cookies.get(cookieKey) || "";
 
   if (activeVariant.length === 0) {
+
+    // Return variant 0 if we don't want to assign a variant
+    if (!assignVariant) {
+      return 0
+    }
+
     const weights: number[] = experiment.variants.map((weight) =>
       weight === undefined ? 1 : weight
     );
@@ -69,11 +75,9 @@ export function experimentVariant(
       activeVariant = weightedRandom(weights);
     }
 
-    if (assignVariant) {
-      Cookies.set(cookieKey, activeVariant, {
-        expires: experiment.maxAgeDays,
-      });
-    }
+    Cookies.set(cookieKey, activeVariant, {
+      expires: experiment.maxAgeDays,
+    });
   }
 
   // Convert active variant into a number type
