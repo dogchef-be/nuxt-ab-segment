@@ -110,7 +110,7 @@ It can be used inside components like:
     payBtnLabel: null as string | null,
   }),
   mounted() {
-    // Scenario: Display a label depending on the variant.
+    // Scenario: Determine an experiment variant and then display a label depending on it.
     const expA = this.$abtest('experiment-a');
     if (expA === 0) {
       this.payBtnLabel = 'Place order';
