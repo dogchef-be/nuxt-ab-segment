@@ -26,7 +26,7 @@
 - TypeScript support
 - Cookies to persist variants across users
 - Force a specific variant via url or param. E.g. `url?abs_experiment-x=1` or `this.$abtest('experiment-x', true, 1);`
-- Avoid assigning and reporting a new variant anywhere. E.g. `this.$abtest('experiment-x', false);`
+- Avoid to activate the a/b test anywhere. E.g. `this.$abtest('experiment-x', false);`
 - Disable all a/b tests by cookie (`abs_disabled=1`), which is useful for E2E tests in CI/CD pipelines
 
 ## Dependencies
@@ -110,7 +110,7 @@ It can be used inside components like:
     payBtnLabel: null as string | null,
   }),
   mounted() {
-    // Example 1: normal usage
+    // Scenario: Display a label depending on the variant.
     const expA = this.$abtest('experiment-a');
     if (expA === 0) {
       this.payBtnLabel = 'Place order';
@@ -118,12 +118,12 @@ It can be used inside components like:
       this.payBtnLabel = 'Pay now!';
     }
 
-    // Example 2: force variant 1
+    // Scenario: We want to force a specific variant programmatically.
     const expB = this.$abtest('experiment-b', true, 1);
     console.log('expB is always 1');
 
-    // Example 3: avoid assigning and reporting a variant
-    // In this case, the third parameter will make no difference
+    // Scenario: We have steps and we want to avoid activating the a/b test in any step 
+    // (meaning.. avoid assigning a variant and reporting it).
     const expC = this.$abtest('experiment-c', false)
     console.log('expC is always 0');
   }
