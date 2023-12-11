@@ -126,7 +126,7 @@ It can be used inside components like:
     // Scenario: Prevent reporting analytics in a specific part of the code.
     // (meaning.. assigning a variant but preventing it from being reported).
     const expC = this.$abtest('experiment-c', true, false)
-    console.log('expC is always 0');
+    console.log('expC is ' + expC + ' but was not reported');
 
     // Scenario: We have steps and we want to avoid activating the a/b test in any step.
     // (meaning.. avoid assigning a variant and reporting it).
