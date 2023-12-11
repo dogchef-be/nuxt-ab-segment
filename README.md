@@ -130,7 +130,7 @@ It can be used inside components like:
 
     // Scenario: We have steps and we want to avoid activating the a/b test in any step.
     // (meaning.. avoid assigning a variant and reporting it).
-    const expC = this.$abtest('experiment-d', false)
+    const expD = this.$abtest('experiment-d', false)
     console.log('expD is always 0');
   }
 }
