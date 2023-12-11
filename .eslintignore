@@ -1,0 +1,9 @@
+# dependencies
+node_modules
+
+# nuxt
+.nuxt
+dist
+
+# other
+.vscode
