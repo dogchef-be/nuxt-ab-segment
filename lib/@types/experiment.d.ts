@@ -1,5 +1,5 @@
 interface Experiment {
-  name: string;
-  maxAgeDays: number;
-  variants: number[];
+  name: string
+  maxAgeDays: number
+  variants: number[]
 }
