@@ -45,7 +45,7 @@ export function experimentVariant(
   const cookieKey = `${COOKIE_PREFIX}_${experimentName}`
 
   // Force a specific variant by url or param
-  const forceVariantByUrl = window.$nuxt.$route.query[experimentName] as string | undefined
+  const forceVariantByUrl = window.$nuxt.$route.query[cookieKey] as string | undefined
 
   const variant = forceVariantByUrl ?? forceVariant?.toString() ?? undefined
   if (variant) {
