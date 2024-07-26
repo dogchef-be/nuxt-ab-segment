@@ -37,38 +37,38 @@ export function experimentVariant(
   forceVariant?: number
 ): number {
   const experiment: Experiment | undefined = EXPERIMENTS.find((exp: Experiment) => exp.name === experimentName)
-
-  if (experiment === undefined || Cookies.get(`${COOKIE_PREFIX}_disabled`) === '1') {
-    return 0
-  }
+  // Return 0 if the experiment is not found or is globally disabled
+  if (experiment === undefined || Cookies.get(`${COOKIE_PREFIX}_disabled`) === '1') return 0
 
   const cookieKey = `${COOKIE_PREFIX}_${experimentName}`
 
   // Force a specific variant by url or param
   const forceVariantByUrl = window.$nuxt.$route.query[cookieKey] as string | undefined
 
-  const variant = forceVariantByUrl ?? forceVariant?.toString() ?? undefined
-  if (variant) {
+  const variant = forceVariantByUrl?.trim() ?? forceVariant?.toString()?.trim() ?? ''
+
+  if (variant.length > 0) {
     Cookies.set(cookieKey, variant, {
       expires: experiment.maxAgeDays,
     })
   }
 
   // Determine the active variant of the experiment
-  let activeVariant: string | number = Cookies.get(cookieKey) || ''
+  let activeVariant = Cookies.get(cookieKey)?.trim() ?? ''
 
   if (activeVariant.length === 0) {
     // Return variant 0 if we don't want to assign a variant
-    if (!assignVariant) {
-      return 0
-    }
+    if (!assignVariant) return 0
 
-    const weights: number[] = experiment.variants.map((weight) => (weight === undefined ? 1 : weight))
-
+    const weights = experiment.variants.map((weight) => (weight === undefined ? 1 : weight))
     let retries = experiment.variants.length
+
     while (activeVariant === '' && retries-- > 0) {
       activeVariant = weightedRandom(weights)
     }
+
+    // If the variant is still empty, return 0 and prevent further assignment
+    if (activeVariant.trim().length === 0) return 0
 
     Cookies.set(cookieKey, activeVariant, {
       expires: experiment.maxAgeDays,
@@ -76,10 +76,10 @@ export function experimentVariant(
   }
 
   // Convert active variant into a number type
-  activeVariant = Number.parseInt(activeVariant)
+  const activeValue = Number.parseInt(activeVariant)
 
   // Return the active variant if we don't want to report it to Segment
-  if (!reportVariant) return activeVariant
+  if (!reportVariant) return activeValue
 
   // Let Segment know about the active experiment's variant
   const reportedKey = `${experimentName}_${activeVariant}`
@@ -93,7 +93,7 @@ export function experimentVariant(
     reported.push(reportedKey)
   }
 
-  return activeVariant
+  return activeValue
 }
 
 const abSegmentPlugin: Plugin = (ctx, inject): void => {
