@@ -30,7 +30,7 @@ function weightedRandom(weights: number[]): string {
   return ''
 }
 
-export function experimentVariant(
+function experimentVariant(
   experimentName: string,
   assignVariant = true,
   reportVariant = true,
