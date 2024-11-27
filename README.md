@@ -52,6 +52,7 @@ export default {
   abSegment: {
     event: "AB Test", // optional
     experiments: '~/experiments.js', // optional
+    debug: process.env.NODE_ENV !== 'production', // optional
   }
 }
 ```
@@ -100,6 +101,15 @@ Event name reported to Segment.
 - Default: `~/experiments.js`
 
 File path for your experiments definition.
+
+### `debug`
+
+- Type: `Boolean`
+- Default:
+  - Development: `true`
+  - Production: `false`
+
+Enables or disables printing Segment reports to the console.
 
 ## Usage
 

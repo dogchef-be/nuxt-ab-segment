@@ -5,6 +5,7 @@ const COOKIE_PREFIX: string = 'abs'
 const EVENT_NAME: string = '<%= options.event %>'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const EXPERIMENTS: Experiment[] = require('<%= options.experiments %>')
+const DEBUG: string = '<%= options.debug %>'
 
 const reported: string[] = []
 
@@ -45,50 +46,62 @@ function experimentVariant(
   // Force a specific variant by url or param
   const forceVariantByUrl = window.$nuxt.$route.query[cookieKey] as string | undefined
 
-  const variant = forceVariantByUrl?.trim() ?? forceVariant?.toString()?.trim() ?? ''
+  let activeVariant = forceVariantByUrl?.trim() ?? forceVariant?.toString()?.trim() ?? ''
 
-  if (variant.length > 0) {
-    Cookies.set(cookieKey, variant, {
-      expires: experiment.maxAgeDays,
-    })
-  }
-
-  // Determine the active variant of the experiment
-  let activeVariant = Cookies.get(cookieKey)?.trim() ?? ''
-
-  if (activeVariant.length === 0) {
-    // Return variant 0 if we don't want to assign a variant
-    if (!assignVariant) return 0
-
-    const weights = experiment.variants.map((weight) => (weight === undefined ? 1 : weight))
-    let retries = experiment.variants.length
-
-    while (activeVariant === '' && retries-- > 0) {
-      activeVariant = weightedRandom(weights)
-    }
-
-    // If the variant is still empty, return 0 and prevent further assignment
-    if (activeVariant.trim().length === 0) return 0
-
+  if (activeVariant.length > 0) {
     Cookies.set(cookieKey, activeVariant, {
       expires: experiment.maxAgeDays,
     })
+  } else {
+    // Determine the active variant of the experiment
+    activeVariant = Cookies.get(cookieKey)?.trim() ?? ''
+
+    if (activeVariant.length === 0) {
+      // Return variant 0 if we don't want to assign a variant
+      if (!assignVariant) {
+        return 0
+      }
+
+      const weights = experiment.variants.map((weight) => (weight === undefined ? 1 : weight))
+      let retries = experiment.variants.length
+
+      while (activeVariant === '' && retries-- > 0) {
+        activeVariant = weightedRandom(weights)
+      }
+
+      // If the variant is still empty, return 0 and prevent further assignment
+      if (activeVariant.trim().length === 0) {
+        return 0
+      }
+
+      Cookies.set(cookieKey, activeVariant, {
+        expires: experiment.maxAgeDays,
+      })
+    }
   }
 
   // Convert active variant into a number type
   const activeValue = Number.parseInt(activeVariant)
 
   // Return the active variant if we don't want to report it to Segment
-  if (!reportVariant) return activeValue
+  if (!reportVariant) {
+    return activeValue
+  }
 
   // Let Segment know about the active experiment's variant
   const reportedKey = `${experimentName}_${activeVariant}`
 
   if (reported.indexOf(reportedKey) === -1 && window.analytics) {
-    window.analytics.track(EVENT_NAME, {
+    const properties = {
       experiment: experimentName,
       variant: activeVariant,
-    })
+    }
+
+    if (DEBUG === 'true') {
+      console.debug('[abSegment]', EVENT_NAME, '\n', properties)
+    }
+
+    window.analytics.track(EVENT_NAME, properties)
 
     reported.push(reportedKey)
   }
@@ -96,7 +109,7 @@ function experimentVariant(
   return activeValue
 }
 
-const abSegmentPlugin: Plugin = (ctx, inject): void => {
+const abSegmentPlugin: Plugin = (_, inject): void => {
   inject('abtest', experimentVariant)
 }
 

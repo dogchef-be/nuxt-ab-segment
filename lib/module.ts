@@ -23,6 +23,7 @@ export default function AbSegmentModule(this: any): void {
   const defaults = {
     event: 'AB Test',
     experiments: '~/experiments.js',
+    debug: process.env.NODE_ENV !== 'production',
   }
 
   const options = Object.assign({}, defaults, this.options.abSegment)
