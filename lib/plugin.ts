@@ -9,6 +9,14 @@ const DEBUG: string = '<%= options.debug %>'
 
 const reported: string[] = []
 
+function toStringValue(value?: number | string | null, defaultValue: string = ''): string {
+  if (value === null || value === undefined) return defaultValue
+
+  const valueAsString = (typeof value === 'string' ? value : value.toString()).trim()
+
+  return valueAsString.length > 0 ? valueAsString : defaultValue
+}
+
 function weightedRandom(weights: number[]): string {
   let totalWeight = 0,
     i,
@@ -22,21 +30,13 @@ function weightedRandom(weights: number[]): string {
 
   for (i = 0; i < weights.length; i++) {
     if (random < weights[i]) {
-      return i.toString()
+      return toStringValue(i)
     }
 
     random -= weights[i]
   }
 
   return ''
-}
-
-function toStringValue(value: unknown): string | null {
-  if (!value) return null
-
-  const valueAsString = (typeof value === 'string' ? value : value.toString()).trim()
-
-  return valueAsString.length > 0 ? valueAsString : null
 }
 
 function experimentVariant(experimentName: string, experimentOptions?: ExperimentOptions): number {
@@ -51,7 +51,7 @@ function experimentVariant(experimentName: string, experimentOptions?: Experimen
   // Force a specific variant by url or param
   const forceVariantByUrl = window.$nuxt.$route.query[cookieKey] as string | undefined
 
-  let activeVariant = toStringValue(forceVariantByUrl) ?? toStringValue(options.forceVariant) ?? ''
+  let activeVariant = toStringValue(forceVariantByUrl, toStringValue(options.forceVariant))
 
   if (activeVariant.length > 0) {
     Cookies.set(cookieKey, activeVariant, {
@@ -59,7 +59,7 @@ function experimentVariant(experimentName: string, experimentOptions?: Experimen
     })
   } else {
     // Determine the active variant of the experiment
-    activeVariant = toStringValue(Cookies.get(cookieKey)) ?? ''
+    activeVariant = toStringValue(Cookies.get(cookieKey))
 
     if (activeVariant.length === 0) {
       // Return variant 0 if we don't want to assign a variant
