@@ -10,7 +10,9 @@ const DEBUG: string = '<%= options.debug %>'
 const reported: string[] = []
 
 function toStringValue(value?: number | string | null, defaultValue: string = ''): string {
-  if (value === null || value === undefined) return defaultValue
+  if (value === null || value === undefined) {
+    return defaultValue
+  }
 
   const valueAsString = (typeof value === 'string' ? value : value.toString()).trim()
 
@@ -40,13 +42,22 @@ function weightedRandom(weights: number[]): string {
 }
 
 function experimentVariant(experimentName: string, experimentOptions?: ExperimentOptions): number {
-  const options: ExperimentOptions = Object.assign({ assignVariant: true }, experimentOptions)
+  // Return 0 if the experiment is globally disabled
+  if (toStringValue(Cookies.get(`${COOKIE_PREFIX}_disabled`)) === '1') {
+    return 0
+  }
 
   const experiment: Experiment | undefined = EXPERIMENTS.find((exp: Experiment) => exp.name === experimentName)
-  // Return 0 if the experiment is not found or is globally disabled
-  if (experiment === undefined || Cookies.get(`${COOKIE_PREFIX}_disabled`) === '1') return 0
+
+  // Return 0 if the experiment is not found
+  if (!experiment) {
+    return 0
+  }
 
   const cookieKey = `${COOKIE_PREFIX}_${experimentName}`
+
+  // By default we always assign a variant
+  const options: ExperimentOptions = Object.assign({ assignVariant: true }, experimentOptions)
 
   // Force a specific variant by url or param
   const forceVariantByUrl = window.$nuxt.$route.query[cookieKey] as string | undefined
