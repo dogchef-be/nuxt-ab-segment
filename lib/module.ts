@@ -8,6 +8,15 @@ const getTypeDefinition = (
 export {}
 declare global {
   export type ExperimentName = ${experimentNames.map((name) => `'${name}'`).join(' | ')};
+  export interface ExperimentOptions {
+    assignVariant?: boolean
+    reportVariant?: boolean
+    forceVariant?: number
+    segment?: {
+      options?: SegmentAnalytics.SegmentOpts
+      properties?: unknown
+    }
+  }
 }
 export declare function experimentVariant(experimentName: ExperimentName, experimentOptions?: ExperimentOptions): number;
 declare module 'vue/types/vue' {
