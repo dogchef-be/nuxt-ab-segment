@@ -121,7 +121,7 @@ It can be used inside components like:
     payBtnLabel: null as string | null,
   }),
   mounted() {
-    // Scenario: Determine an experiment variant and then display a label depending on it.
+    // Scenario: Determine an experiment variant and display a label accordingly.
     const expA = this.$abtest('experiment-a');
     if (expA === 0) {
       this.payBtnLabel = 'Place order';
@@ -129,19 +129,24 @@ It can be used inside components like:
       this.payBtnLabel = 'Pay now!';
     }
 
-    // Scenario: We want to force a specific variant programmatically.
-    const expB = this.$abtest('experiment-b', true, true, 1);
-    console.log('expB is always 1');
+    // Scenario: Force a specific variant programmatically.
+    const expB = this.$abtest('experiment-b', { forceVariant: 1 });
+    console.log('Variant for expB is always 1');
 
-    // Scenario: Prevent reporting analytics in a specific part of the code.
-    // (meaning.. assigning a variant but preventing it from being reported).
-    const expC = this.$abtest('experiment-c', true, false)
-    console.log('expC is ' + expC + ' but was not reported');
+    // Scenario: Assign a variant and report it for analytics.
+    const expC = this.$abtest('experiment-c', { reportVariant: true });
+    console.log(`Variant for expC is ${expC}, and it was reported.`);
 
-    // Scenario: We have steps and we want to avoid activating the a/b test in any step.
-    // (meaning.. avoid assigning a variant and reporting it).
-    const expD = this.$abtest('experiment-d', false)
-    console.log('expD is always 0');
+    // Scenario: Avoid activating an A/B test at a specific step.
+    // (No variant assignment or reporting is done.)
+    const expD = this.$abtest('experiment-d', { assignVariant: false });
+    console.log('Variant for expD is always 0');
+
+    // Scenario: Report analytics and append specific properties.
+    // (experiment, but additional data is sent.)
+    const expE = this.$abtest('experiment-e', { reportVariant: true, segment: { properties: { device: 'mobile' } } });
+    console.log(`Variant for expE is ${expE}, and will include the properties: { experiment: 'experiment-e', variant: ${expE}, device: 'mobile' }`);
+
   }
 }
 ```

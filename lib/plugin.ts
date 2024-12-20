@@ -31,12 +31,17 @@ function weightedRandom(weights: number[]): string {
   return ''
 }
 
-function experimentVariant(
-  experimentName: string,
-  assignVariant = true,
-  reportVariant = true,
-  forceVariant?: number
-): number {
+function toStringValue(value: unknown): string | null {
+  if (!value) return null
+
+  const valueAsString = (typeof value === 'string' ? value : value.toString()).trim()
+
+  return valueAsString.length > 0 ? valueAsString : null
+}
+
+function experimentVariant(experimentName: string, experimentOptions?: ExperimentOptions): number {
+  const options: ExperimentOptions = Object.assign({ assignVariant: true }, experimentOptions)
+
   const experiment: Experiment | undefined = EXPERIMENTS.find((exp: Experiment) => exp.name === experimentName)
   // Return 0 if the experiment is not found or is globally disabled
   if (experiment === undefined || Cookies.get(`${COOKIE_PREFIX}_disabled`) === '1') return 0
@@ -46,7 +51,7 @@ function experimentVariant(
   // Force a specific variant by url or param
   const forceVariantByUrl = window.$nuxt.$route.query[cookieKey] as string | undefined
 
-  let activeVariant = forceVariantByUrl?.trim() ?? forceVariant?.toString()?.trim() ?? ''
+  let activeVariant = toStringValue(forceVariantByUrl) ?? toStringValue(options.forceVariant) ?? ''
 
   if (activeVariant.length > 0) {
     Cookies.set(cookieKey, activeVariant, {
@@ -54,11 +59,11 @@ function experimentVariant(
     })
   } else {
     // Determine the active variant of the experiment
-    activeVariant = Cookies.get(cookieKey)?.trim() ?? ''
+    activeVariant = toStringValue(Cookies.get(cookieKey)) ?? ''
 
     if (activeVariant.length === 0) {
       // Return variant 0 if we don't want to assign a variant
-      if (!assignVariant) {
+      if (!options.assignVariant) {
         return 0
       }
 
@@ -84,7 +89,7 @@ function experimentVariant(
   const activeValue = Number.parseInt(activeVariant)
 
   // Return the active variant if we don't want to report it to Segment
-  if (!reportVariant) {
+  if (!options.reportVariant) {
     return activeValue
   }
 
@@ -92,16 +97,19 @@ function experimentVariant(
   const reportedKey = `${experimentName}_${activeVariant}`
 
   if (reported.indexOf(reportedKey) === -1 && window.analytics) {
-    const properties = {
-      experiment: experimentName,
-      variant: activeVariant,
-    }
+    const properties = Object.assign(
+      {
+        experiment: experimentName,
+        variant: activeVariant,
+      },
+      options.segment?.properties ?? {}
+    )
 
     if (DEBUG === 'true') {
-      console.debug('[abSegment]', EVENT_NAME, '\n', properties)
+      console.debug('[abSegment]', EVENT_NAME, '\n', properties, options.segment?.options)
     }
 
-    window.analytics.track(EVENT_NAME, properties)
+    window.analytics.track(EVENT_NAME, properties, options.segment?.options)
 
     reported.push(reportedKey)
   }

@@ -9,7 +9,7 @@ export {}
 declare global {
   export type ExperimentName = ${experimentNames.map((name) => `'${name}'`).join(' | ')};
 }
-export declare function experimentVariant(experimentName: ExperimentName, assignVariant?: boolean, reportVariant?: boolean, forceVariant?: number): number;
+export declare function experimentVariant(experimentName: ExperimentName, experimentOptions?: ExperimentOptions): number;
 declare module 'vue/types/vue' {
   interface Vue {
     $abtest: typeof experimentVariant,
