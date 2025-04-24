@@ -1,6 +1,6 @@
 {
   "name": "nuxt-ab-segment",
-  "version": "4.0.3",
+  "version": "5.0.0",
   "description": "NuxtJS module for A/B testing with Segment Analytics",
   "repository": "github:dogchef-be/nuxt-ab-segment",
   "license": "MIT",
@@ -11,8 +11,7 @@
   "types": "dist/module.d.ts",
   "scripts": {
     "clean": "npm prune && rm -rf dist",
-    "transpile": "tsc",
-    "build": "npm run clean && npm run transpile"
+    "build": "npm run clean && tsc"
   },
   "dependencies": {
     "chokidar": "^3.6.0",
@@ -22,16 +21,16 @@
     "@nuxt/types": "^2.18.1",
     "@nuxt/typescript-build": "^3.0.2",
     "@types/js-cookie": "^3.0.6",
-    "@types/node": "^18.19.68",
+    "@types/node": "^22.14.1",
     "@types/segment-analytics": "^0.0.38",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "eslint": "^8.57.1",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-prettier": "^5.2.6",
     "eslint-plugin-unused-imports": "^3.2.0",
     "nuxt": "^2.18.1",
-    "prettier": "3.4.2",
+    "prettier": "3.5.3",
     "sass": "^1.83.0",
     "webpack": "^4.47.0"
   }

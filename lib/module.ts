@@ -1,31 +1,47 @@
 import chokidar from 'chokidar'
-import path from 'path'
 import fs from 'fs'
+import path from 'path'
 
-const getTypeDefinition = (
-  experimentNames: string[]
-) => `// This file is generated automatically by nuxt-ab-segment. Do not edit manually.
-export {}
-declare global {
-  export type ExperimentName = ${experimentNames.map((name) => `'${name}'`).join(' | ')};
-  export interface ExperimentOptions {
-    assignVariant?: boolean
-    reportVariant?: boolean
-    forceVariant?: number
-    segment?: {
-      options?: SegmentAnalytics.SegmentOpts
-      properties?: unknown
+function flatExperimentNames(experiments: Experiment[]): string[] {
+  return experiments.reduce<string[]>((acc, exp) => {
+    if (exp.variants.every((v) => typeof v !== 'number')) {
+      acc.push(...flatExperimentNames(exp.variants))
+    } else {
+      acc.push(`'${exp.name}'`)
     }
-  }
+
+    return acc
+  }, [])
 }
-export declare function experimentVariant(experimentName: ExperimentName, experimentOptions?: ExperimentOptions): number;
-declare module 'vue/types/vue' {
-  interface Vue {
-    $abtest: typeof experimentVariant,
-  }
+
+function generateTypeDefinition(experiments: Experiment[]): string {
+  return (
+    `// This file is generated automatically by nuxt-ab-segment. Do not edit manually.\n` +
+    `export {}\n` +
+    `export type ExperimentName = ${flatExperimentNames(experiments).join(' | ')};\n` +
+    `export interface Experiment {\n` +
+    `  name: ExperimentName\n` +
+    `  variants: number[] | Experiment[]\n` +
+    `  maxAgeDays?: number\n` +
+    `}\n` +
+    `export interface ExperimentOptions {\n` +
+    `  assignVariant?: boolean\n` +
+    `  reportVariant?: boolean\n` +
+    `  forceVariant?: number\n` +
+    `  segment?: {\n` +
+    `    options?: SegmentAnalytics.SegmentOpts\n` +
+    `    properties?: unknown\n` +
+    `  }\n` +
+    `}\n` +
+    `export declare function experimentVariant(experimentName: ExperimentName, experimentOptions?: ExperimentOptions): number;\n` +
+    `declare module 'vue/types/vue' {\n` +
+    `  interface Vue {\n` +
+    `    $abtest: typeof experimentVariant,\n` +
+    `  }\n` +
+    `}\n` +
+    `export default function AbSegmentModule(this: any): void;\n`
+  )
 }
-export default function AbSegmentModule(this: any): void;
-`
 
 // eslint-disable-next-line
 export default function AbSegmentModule(this: any): void {
@@ -50,8 +66,8 @@ export default function AbSegmentModule(this: any): void {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const experiments = require(experimentsPath)
-    const definition = getTypeDefinition(experiments.map((exp: any) => exp.name))
+    const experiments: Experiment[] = require(experimentsPath)
+    const definition = generateTypeDefinition(experiments)
 
     if (!fs.existsSync(path.dirname(dtsPath))) {
       fs.mkdirSync(path.dirname(dtsPath), { recursive: true })
@@ -72,6 +88,7 @@ export default function AbSegmentModule(this: any): void {
 
   this.addPlugin({
     src: path.resolve(__dirname, 'plugin.js'),
+    mode: 'client',
     ssr: 'false',
     options,
   })

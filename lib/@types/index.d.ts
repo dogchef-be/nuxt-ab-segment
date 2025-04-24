@@ -1,7 +1,14 @@
+interface Variant {
+  name: string
+  index: number
+  weights: number[]
+  maxAgeDays?: number
+}
+
 interface Experiment {
   name: string
-  maxAgeDays: number
-  variants: number[]
+  variants: number[] | Experiment[]
+  maxAgeDays?: number
 }
 
 interface ExperimentOptions {

@@ -1,5 +1,5 @@
 import Cookies from 'js-cookie'
-import { Plugin } from '@nuxt/types'
+import type { Plugin } from '@nuxt/types'
 
 const COOKIE_PREFIX: string = 'abs'
 const EVENT_NAME: string = '<%= options.event %>'
@@ -8,6 +8,10 @@ const EXPERIMENTS: Experiment[] = require('<%= options.experiments %>')
 const DEBUG: string = '<%= options.debug %>'
 
 const reported: string[] = []
+
+function isExperimentArray(variants: number[] | Experiment[]): variants is Experiment[] {
+  return variants.every((variant) => typeof variant !== 'number')
+}
 
 function toStringValue(value?: number | string | null, defaultValue: string = ''): string {
   if (value === null || value === undefined) {
@@ -20,17 +24,11 @@ function toStringValue(value?: number | string | null, defaultValue: string = ''
 }
 
 function weightedRandom(weights: number[]): string {
-  let totalWeight = 0,
-    i,
-    random
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0)
 
-  for (i = 0; i < weights.length; i++) {
-    totalWeight += weights[i]
-  }
+  let random = Math.random() * totalWeight
 
-  random = Math.random() * totalWeight
-
-  for (i = 0; i < weights.length; i++) {
+  for (let i = 0; i < weights.length; i++) {
     if (random < weights[i]) {
       return toStringValue(i)
     }
@@ -41,16 +39,73 @@ function weightedRandom(weights: number[]): string {
   return ''
 }
 
+function calculateDistribution(variants: number[] | Experiment[]): number[] {
+  if (isExperimentArray(variants)) {
+    const quantity = variants.length
+
+    const base = Math.floor(100 / quantity)
+    const distribution = Array.from({ length: quantity }, () => base)
+
+    let remaining = 100 - base * quantity
+
+    for (let i = 0; remaining > 0; i++, remaining--) {
+      distribution[i]++
+    }
+
+    return distribution
+  }
+
+  return variants
+}
+
+function findExperiment(
+  name: string,
+  experiments: Experiment[],
+  parent: Experiment | null = null
+): {
+  parent: Experiment | null
+  variant: Variant | null
+} {
+  for (let i = 0; i < experiments.length; i++) {
+    const exp = experiments[i]
+
+    if (exp.name === name) {
+      const variants = calculateDistribution(exp.variants)
+
+      return {
+        variant: {
+          index: i,
+          name: exp.name,
+          weights: variants.map((weight) => {
+            return weight === undefined ? 1 : weight
+          }),
+        },
+        parent,
+      }
+    }
+
+    if (isExperimentArray(exp.variants)) {
+      const found = findExperiment(name, exp.variants, exp)
+
+      if (found.variant) {
+        return found
+      }
+    }
+  }
+
+  return { parent: null, variant: null }
+}
+
 function experimentVariant(experimentName: string, experimentOptions?: ExperimentOptions): number {
   // Return 0 if the experiment is globally disabled
   if (toStringValue(Cookies.get(`${COOKIE_PREFIX}_disabled`)) === '1') {
     return 0
   }
 
-  const experiment: Experiment | undefined = EXPERIMENTS.find((exp: Experiment) => exp.name === experimentName)
+  const { variant, parent } = findExperiment(experimentName, EXPERIMENTS)
 
   // Return 0 if the experiment is not found
-  if (!experiment) {
+  if (!variant) {
     return 0
   }
 
@@ -59,15 +114,30 @@ function experimentVariant(experimentName: string, experimentOptions?: Experimen
   // By default we always assign a variant
   const options: ExperimentOptions = Object.assign({ assignVariant: true }, experimentOptions)
 
+  let reportVariant = options.reportVariant || false
+
   // Force a specific variant by url or param
-  const forceVariantByUrl = window.$nuxt.$route.query[cookieKey] as string | undefined
+  let activeVariant = toStringValue(
+    window.$nuxt.$route.query[cookieKey] as string | undefined,
+    toStringValue(options.forceVariant)
+  )
 
-  let activeVariant = toStringValue(forceVariantByUrl, toStringValue(options.forceVariant))
+  const hasActiveVariant = activeVariant.length > 0
 
-  if (activeVariant.length > 0) {
-    Cookies.set(cookieKey, activeVariant, {
-      expires: experiment.maxAgeDays,
-    })
+  // If we have an active variant forced by url or parameter we must force the parent to the variant index
+  const parentOptions: ExperimentOptions = {
+    ...(hasActiveVariant ? { forceVariant: variant.index } : {}),
+    reportVariant,
+  }
+
+  // If we have a parent we must first check if this test bellongs to the right split
+  if (parent && experimentVariant(parent.name, parentOptions) !== variant.index) {
+    reportVariant = false
+    activeVariant = '0'
+  }
+
+  if (hasActiveVariant) {
+    Cookies.set(cookieKey, activeVariant, { expires: variant.maxAgeDays })
   } else {
     // Determine the active variant of the experiment
     activeVariant = toStringValue(Cookies.get(cookieKey))
@@ -78,11 +148,10 @@ function experimentVariant(experimentName: string, experimentOptions?: Experimen
         return 0
       }
 
-      const weights = experiment.variants.map((weight) => (weight === undefined ? 1 : weight))
-      let retries = experiment.variants.length
+      let retries = variant.weights.length
 
       while (activeVariant === '' && retries-- > 0) {
-        activeVariant = weightedRandom(weights)
+        activeVariant = weightedRandom(variant.weights)
       }
 
       // If the variant is still empty, return 0 and prevent further assignment
@@ -90,9 +159,7 @@ function experimentVariant(experimentName: string, experimentOptions?: Experimen
         return 0
       }
 
-      Cookies.set(cookieKey, activeVariant, {
-        expires: experiment.maxAgeDays,
-      })
+      Cookies.set(cookieKey, activeVariant, { expires: variant.maxAgeDays })
     }
   }
 
@@ -100,27 +167,30 @@ function experimentVariant(experimentName: string, experimentOptions?: Experimen
   const activeValue = Number.parseInt(activeVariant)
 
   // Return the active variant if we don't want to report it to Segment
-  if (!options.reportVariant) {
+  if (!reportVariant) {
     return activeValue
   }
 
   // Let Segment know about the active experiment's variant
   const reportedKey = `${experimentName}_${activeVariant}`
 
-  if (reported.indexOf(reportedKey) === -1 && window.analytics) {
-    const properties = Object.assign(
-      {
-        experiment: experimentName,
-        variant: activeVariant,
-      },
-      options.segment?.properties ?? {}
-    )
+  if (!reported.includes(reportedKey) && Boolean(window.analytics)) {
+    const parameters = [
+      Object.assign(
+        {
+          experiment: experimentName,
+          variant: activeVariant,
+        },
+        options.segment?.properties || {}
+      ),
+      ...(options.segment?.options ? [options.segment.options] : []),
+    ]
 
     if (DEBUG === 'true') {
-      console.debug('[abSegment]', EVENT_NAME, '\n', properties, options.segment?.options)
+      console.debug('[abSegment]', EVENT_NAME, '\n', ...parameters)
     }
 
-    window.analytics.track(EVENT_NAME, properties, options.segment?.options)
+    window.analytics.track(EVENT_NAME, ...parameters)
 
     reported.push(reportedKey)
   }

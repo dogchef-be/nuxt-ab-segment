@@ -64,7 +64,7 @@ export default {
  * {
  *  name: string; A name to identify the experiment on this.$abtest('NAME_HERE')
  *  maxAgeDays: number; Number of days to persist the cookie of user's active variant
- *  variants: number[]; An array of variants weights
+ *  variants: number[] | Experiment[]; An array of variant weights or an array of nested experiments.
  * }
  */
 module.exports = [
@@ -72,6 +72,38 @@ module.exports = [
     name: "experiment-x",
     maxAgeDays: 15,
     variants: [50, 50],
+  },
+  {
+    name: "experiment-y", // Weights will be automatically calculated [50, 50]
+    maxAgeDays: 15,
+    variants: [
+      {
+        name: "parent-1", // Weights will be automatically calculated [34, 33, 33]
+        maxAgeDays: 15,
+        variants: [
+          {
+            name: "children-1",
+            maxAgeDays: 15,
+            variants: [50, 50],
+          },
+          {
+            name: "children-2",
+            maxAgeDays: 15,
+            variants: [50, 50],
+          },
+          {
+            name: "children-3",
+            maxAgeDays: 15,
+            variants: [50, 50],
+          },
+        ],
+      },
+      {
+        name: "parent-2",
+        maxAgeDays: 15,
+        variants: [50, 50],
+      }, 
+    ],
   },
 ];
 ```
