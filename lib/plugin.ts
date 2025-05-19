@@ -7,7 +7,51 @@ const EVENT_NAME: string = '<%= options.event %>'
 const EXPERIMENTS: Experiment[] = require('<%= options.experiments %>')
 const DEBUG: string = '<%= options.debug %>'
 
-const reported: string[] = []
+const REPORTED_COOKIE: string = `${COOKIE_PREFIX}_reported`
+
+function shouldReport(reportedKey: string): boolean {
+  return !getReported().includes(reportedKey)
+}
+
+function getReported(): string[] {
+  const reportedCookie = toStringValue(Cookies.get(REPORTED_COOKIE))
+
+  if (reportedCookie.length === 0) {
+    return []
+  }
+
+  try {
+    const reported = JSON.parse(reportedCookie)
+
+    if (!Array.isArray(reported)) {
+      return []
+    }
+
+    return reported.flatMap((item) => {
+      const value = toStringValue(item)
+
+      return value.length > 0 ? [value] : []
+    })
+  } catch (error) {
+    return []
+  }
+}
+
+function setReported(reportedKey: string): void {
+  const key = toStringValue(reportedKey)
+
+  if (key.length === 0) {
+    return
+  }
+
+  const reported = getReported()
+
+  if (!reported.includes(key)) {
+    reported.push(key)
+  }
+
+  Cookies.set(REPORTED_COOKIE, JSON.stringify(reported.sort()))
+}
 
 function isExperimentArray(variants: number[] | Experiment[]): variants is Experiment[] {
   return variants.every((variant) => typeof variant !== 'number')
@@ -174,7 +218,7 @@ function experimentVariant(experimentName: string, experimentOptions?: Experimen
   // Let Segment know about the active experiment's variant
   const reportedKey = `${experimentName}_${activeVariant}`
 
-  if (!reported.includes(reportedKey) && Boolean(window.analytics)) {
+  if (shouldReport(reportedKey) && Boolean(window.analytics)) {
     const parameters = [
       Object.assign(
         {
@@ -192,7 +236,7 @@ function experimentVariant(experimentName: string, experimentOptions?: Experimen
 
     window.analytics.track(EVENT_NAME, ...parameters)
 
-    reported.push(reportedKey)
+    setReported(reportedKey)
   }
 
   return activeValue
