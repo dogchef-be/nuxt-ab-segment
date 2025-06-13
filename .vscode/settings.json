@@ -1,0 +1,35 @@
+{
+  "[markdown]": {
+    "files.trimTrailingWhitespace": false
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  "editor.detectIndentation": true,
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.linkedEditing": true,
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  "editor.tabSize": 2,
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "git.openRepositoryInParentFolders": "always",
+  "html.autoClosingTags": true,
+  "makefile.configureOnOpen": false,
+  "path-intellisense.extensionOnImport": true,
+  "search.exclude": {
+    "**/*-lock.json": true,
+    "**/*.lock": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "eslint.format.enable": true
+}
