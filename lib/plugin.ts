@@ -162,7 +162,7 @@ function experimentVariant(experimentName: string, experimentOptions?: Experimen
 
   // Force a specific variant by url or param
   let activeVariant = toStringValue(
-    window.$nuxt.$route.query[cookieKey] as string | undefined,
+    window?.$nuxt?.$route?.query?.[cookieKey] as string | undefined,
     toStringValue(options.forceVariant)
   )
 

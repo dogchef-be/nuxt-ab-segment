@@ -1,8 +1,11 @@
 {
   "name": "nuxt-ab-segment",
-  "version": "5.1.0",
+  "version": "5.1.1",
   "description": "NuxtJS module for A/B testing with Segment Analytics",
-  "repository": "github:dogchef-be/nuxt-ab-segment",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dogchef-be/nuxt-ab-segment.git"
+  },
   "license": "MIT",
   "files": [
     "dist"
